@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authStorage, initializeDefaultUsers } from '../lib/storage';
 import type { User } from '../types';
 
 interface AuthContextType {
@@ -11,24 +10,29 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const API_URL = 'https://adaptacoescurriculares-api.onrender.com';
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Initialize default users if needed
-    initializeDefaultUsers();
-    
     // Check for existing session
     checkSession();
   }, []);
 
   function checkSession() {
     try {
-      const currentUser = authStorage.getCurrentUser();
-      setUser(currentUser);
+      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+
+      if (token && storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
     } catch (error) {
       console.error('Error checking session:', error);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       setUser(null);
     } finally {
       setLoading(false);
@@ -36,17 +40,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signIn(email: string, password: string) {
-    const userData = authStorage.signIn(email, password);
-    
-    if (!userData) {
-      throw new Error('E-mail ou senha inválidos');
+    // Busca o usuário na rota /users filtrando pelo email
+    const response = await fetch(`${API_URL}/users?email=${email}`);
+
+    if (!response.ok) {
+      throw new Error('Erro ao conectar com a API');
     }
-    
-    setUser(userData);
+
+    const data = await response.json();
+    const user = Array.isArray(data) && data.length > 0 ? data[0] : null;
+
+    if (!user) {
+      throw new Error('Usuário não encontrado. Verifique o e-mail digitado.');
+    }
+
+    // Gera um token fictício para manter a sessão ativa, já que a rota /users não retorna token
+    const token = `mock-token-${user.id}`;
+
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    setUser(user);
   }
 
   async function signOut() {
-    authStorage.signOut();
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setUser(null);
   }
 
