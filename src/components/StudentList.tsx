@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../lib/api';
 import type { Student } from '../types';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -16,6 +15,8 @@ interface StudentListProps {
   onAddNew?: () => void;
   showActions?: boolean;
 }
+
+const API_URL = 'https://adaptacoescurriculares-api.onrender.com';
 
 export function StudentList({ 
   onSelectStudent, 
@@ -46,7 +47,11 @@ export function StudentList({
     try {
       setLoading(true);
       setError('');
-      const data = await api.getStudents();
+      const response = await fetch(`${API_URL}/students`);
+      if (!response.ok) {
+        throw new Error('Erro ao carregar estudantes');
+      }
+      const data = await response.json();
       setStudents(data);
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar estudantes');
