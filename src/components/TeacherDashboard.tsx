@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from './ui/alert';
 import { Search, Eye, FileCheck } from 'lucide-react';
 
 const API_URL = 'https://adaptacoescurriculares-api.onrender.com';
+import { apiFetch } from '../lib/api';
 
 export function TeacherDashboard() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -37,22 +38,21 @@ export function TeacherDashboard() {
       setLoading(true);
       setError('');
       
-      const response = await fetch(`${API_URL}/students`);
-      if (!response.ok) throw new Error('Erro ao carregar estudantes');
-      const allStudents = await response.json();
-      
+      const allStudents = await apiFetch(`${API_URL}/students`);
+
       // Check which students have adaptations
       const studentsWithAdaps = new Set<string>();
       for (const student of allStudents) {
-        const adapsResponse = await fetch(`${API_URL}/adaptations?studentId=${student.id}`);
-        if (adapsResponse.ok) {
-          const adaptations = await adapsResponse.json();
-          if (adaptations.length > 0) {
+        try {
+          const adaptations = await apiFetch(`${API_URL}/adaptations?studentId=${student.id}`);
+          if (Array.isArray(adaptations) && adaptations.length > 0) {
             studentsWithAdaps.add(student.id);
           }
+        } catch (e) {
+          // ignore per-student errors but keep loading others
         }
       }
-      
+
       setStudents(allStudents);
       setStudentsWithAdaptations(studentsWithAdaps);
     } catch (err: any) {

@@ -14,7 +14,7 @@ interface AdaptationFormProps {
   adaptation?: Adaptation | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess: (createdAdaptation?: Adaptation) => void;
 }
 
 export function AdaptationForm({ 
@@ -63,14 +63,26 @@ export function AdaptationForm({
 
     setLoading(true);
     try {
+      let created: Adaptation | undefined;
       if (adaptation) {
-        await api.updateAdaptation(studentId, adaptation.id, formData);
+        const res = await api.updateAdaptation(studentId, adaptation.id, {
+          ...formData,
+          date: new Date(formData.date).toISOString(),
+        });
+        // API may return either { adaptation } or the adaptation object directly
+        created = (res && (res as any).adaptation) ? (res as any).adaptation : (res && (res as any).id ? (res as any) : undefined);
         toast.success('Adaptação atualizada com sucesso!');
       } else {
-        await api.createAdaptation({ ...formData, studentId });
+        const res = await api.createAdaptation({
+          ...formData,
+          studentId,
+          date: new Date(formData.date).toISOString(),
+        });
+        // API may return either { adaptation } or the adaptation object directly
+        created = (res && (res as any).adaptation) ? (res as any).adaptation : (res && (res as any).id ? (res as any) : undefined);
         toast.success('Adaptação registrada com sucesso!');
       }
-      onSuccess();
+      onSuccess(created);
       onOpenChange(false);
     } catch (err: any) {
       setError(err.message || 'Erro ao salvar adaptação');

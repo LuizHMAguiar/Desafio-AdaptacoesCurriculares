@@ -14,6 +14,7 @@ interface StudentFormProps {
 }
 
 const API_URL = 'https://adaptacoescurriculares-api.onrender.com';
+import { apiFetch } from '../lib/api';
 
 export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) {
   const [formData, setFormData] = useState({
@@ -58,20 +59,18 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
     setLoading(true);
     try {
       if (student) {
-        const response = await fetch(`${API_URL}/students/${student.id}`, {
+        await apiFetch(`${API_URL}/students/${student.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
         });
-        if (!response.ok) throw new Error('Erro ao atualizar estudante');
         toast.success('Estudante atualizado com sucesso!');
       } else {
-        const response = await fetch(`${API_URL}/students`, {
+        await apiFetch(`${API_URL}/students`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
         });
-        if (!response.ok) throw new Error('Erro ao cadastrar estudante');
         toast.success('Estudante cadastrado com sucesso!');
       }
       onSuccess();

@@ -6,6 +6,7 @@ import type { Student } from '../types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Users, FileText } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
+import { apiFetch } from '../lib/api';
 
 const API_URL = 'https://adaptacoescurriculares-api.onrender.com';
 
@@ -26,10 +27,7 @@ export function CoordinatorDashboard() {
 
   const handleDeleteStudent = async (student: Student) => {
     try {
-      const response = await fetch(`${API_URL}/students/${student.id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) throw new Error('Erro ao excluir estudante');
+      await apiFetch(`${API_URL}/students/${student.id}`, { method: 'DELETE' });
       toast.success('Estudante excluído com sucesso!');
       setRefreshKey(prev => prev + 1);
     } catch (err: any) {

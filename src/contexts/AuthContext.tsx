@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { User } from '../types';
+import { apiFetch } from '../lib/api';
 
 interface AuthContextType {
   user: User | null;
@@ -41,13 +42,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function signIn(email: string, password: string) {
     // Busca o usuário na rota /users filtrando pelo email
-    const response = await fetch(`${API_URL}/users?email=${email}`);
-
-    if (!response.ok) {
-      throw new Error('Erro ao conectar com a API');
+    let data: any;
+    try {
+      data = await apiFetch(`${API_URL}/users?email=${email}`);
+    } catch (err: any) {
+      throw new Error(err?.message || 'Erro ao conectar com a API');
     }
-
-    const data = await response.json();
     const user = Array.isArray(data) && data.length > 0 ? data[0] : null;
 
     if (!user) {

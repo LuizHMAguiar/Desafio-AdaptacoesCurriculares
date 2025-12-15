@@ -9,11 +9,28 @@ const app = new Hono();
 app.use('*', cors());
 app.use('*', logger(console.log));
 
+// Validate required environment variables early to avoid cryptic crashes
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('Missing required environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+  throw new Error('Environment misconfiguration: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required');
+}
+
 // Initialize Supabase client
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL')!,
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-);
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+// Global error handler to standardize unexpected errors
+app.onError((err, c) => {
+  try {
+    console.error('Unhandled error in request:', err?.stack || err);
+  } catch (logErr) {
+    console.error('Error while logging an error', logErr);
+  }
+  // Respond with a normalized JSON error
+  return c.json({ error: 'Erro interno do servidor' }, 500);
+});
 
 // Helper function to get user from access token
 async function getUserFromToken(request: Request) {
@@ -323,7 +340,7 @@ app.delete('/make-server-2a0842b8/adaptations/:studentId/:id', async (c) => {
 // REPORT ROUTES (Professores)
 // ============================================
 
-app.get('/make-server-2a0842b8/reports/:studentId', async (c) => {
+app.get('/make-server-2a0842b8/student-report/:studentId', async (c) => {
   try {
     const user = await getUserFromToken(c.req.raw);
     if (!user) {
@@ -441,7 +458,7 @@ app.delete('/make-server-2a0842b8/reports/:studentId/:id', async (c) => {
 // FULL STUDENT REPORT (with adaptations and reports)
 // ============================================
 
-app.get('/make-server-2a0842b8/student-report/:studentId', async (c) => {
+app.get('/make-server-2a0842b8/reports/:studentId', async (c) => {
   try {
     const user = await getUserFromToken(c.req.raw);
     if (!user) {
