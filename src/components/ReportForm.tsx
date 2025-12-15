@@ -15,7 +15,7 @@ interface ReportFormProps {
   report?: Report | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess: (createdReport?: Report) => void;
 }
 
 export function ReportForm({ 
@@ -29,6 +29,7 @@ export function ReportForm({
     subject: '',
     result: 'neutro' as ReportResult,
     description: '',
+    date: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -39,12 +40,15 @@ export function ReportForm({
         subject: report.subject,
         result: report.result,
         description: report.description,
+        // convert ISO date to yyyy-mm-dd for input[type=date]
+        date: report.date ? new Date(report.date).toISOString().slice(0,10) : '',
       });
     } else {
       setFormData({
         subject: '',
         result: 'neutro',
         description: '',
+        date: new Date().toISOString().slice(0,10),
       });
     }
   }, [report, open]);
@@ -62,17 +66,28 @@ export function ReportForm({
       return;
     }
 
+    if (!formData.date) {
+      setError('Por favor, informe a data do relato');
+      return;
+    }
+
     setLoading(true);
     try {
+        let created: Report | undefined;
       if (report) {
         await api.updateReport(studentId, report.id, formData);
         toast.success('Relato atualizado com sucesso!');
       } else {
-        await api.createReport({ ...formData, studentId });
-        toast.success('Relato registrado com sucesso!');
+          // ensure date is sent as ISO string
+          const payload = { ...formData, studentId, date: new Date(formData.date).toISOString() };
+          created = await api.createReport(payload);
+          toast.success('Relato registrado com sucesso!');
+          // small delay to allow backend eventual consistency before reloading
+          await new Promise((res) => setTimeout(res, 250));
       }
-      onSuccess();
+      // Close modal first, then notify parent to reload. Pass created report so parent can optimistically add it.
       onOpenChange(false);
+        onSuccess(created);
     } catch (err: any) {
       setError(err.message || 'Erro ao salvar relato');
       toast.error(err.message || 'Erro ao salvar relato');

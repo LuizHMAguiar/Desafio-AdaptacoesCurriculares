@@ -41,8 +41,29 @@ export function StudentReport({ studentId, onBack }: StudentReportProps) {
     loadReport();
   }, [studentId]);
 
-  async function loadReport() {
+  async function loadReport(createdItem?: Report | Adaptation) {
     try {
+      // If a created item is provided, optimistically add it to the current state
+      if (createdItem && data) {
+        // Distinguish report vs adaptation by unique fields
+        if ((createdItem as Report).result !== undefined) {
+          // it's a Report
+          setData({
+            ...data,
+            reports: [(createdItem as Report), ...(Array.isArray(data.reports) ? data.reports : [])]
+          });
+          return;
+        }
+        if ((createdItem as Adaptation).justification !== undefined) {
+          // it's an Adaptation
+          setData({
+            ...data,
+            adaptations: [(createdItem as Adaptation), ...(Array.isArray(data.adaptations) ? data.adaptations : [])]
+          });
+          return;
+        }
+      }
+
       setLoading(true);
       setError('');
       const reportData = await api.getStudentReport(studentId);
@@ -83,20 +104,22 @@ export function StudentReport({ studentId, onBack }: StudentReportProps) {
   };
 
   const getResultBadge = (result: string) => {
-    const variants = {
+    const safe = (result || 'neutro').toString().toLowerCase();
+    const variants: Record<string, string> = {
       positivo: 'default',
       neutro: 'secondary',
       negativo: 'destructive',
     };
-    return (
-      <Badge variant={variants[result as keyof typeof variants] as any}>
-        {result.charAt(0).toUpperCase() + result.slice(1)}
-      </Badge>
-    );
+    const label = safe.charAt(0).toUpperCase() + safe.slice(1);
+    const variant = variants[safe] || 'secondary';
+    return <Badge variant={variant as any}>{label}</Badge>;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return 'Data não informada';
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return 'Data não informada';
+    return d.toLocaleDateString('pt-BR');
   };
 
   if (loading) {
@@ -125,6 +148,9 @@ export function StudentReport({ studentId, onBack }: StudentReportProps) {
   }
 
   const isCoordinator = user?.role === 'coordenador';
+  // Defensive: ensure adaptations/reports are arrays to avoid runtime errors
+  const adaptations = Array.isArray(data.adaptations) ? data.adaptations : [];
+  const reports = Array.isArray(data.reports) ? data.reports : [];
 
   return (
     <>
@@ -148,9 +174,9 @@ export function StudentReport({ studentId, onBack }: StudentReportProps) {
                 <GraduationCap className="size-6 text-blue-600" />
               </div>
               <div>
-                <CardTitle>{data.student.name}</CardTitle>
+                <CardTitle>{data.student?.name || 'Nome não disponível'}</CardTitle>
                 <p className="text-sm text-gray-600 mt-1">
-                  Matrícula: {data.student.registrationNumber}
+                  Matrícula: {data.student?.registrationNumber || '—'}
                 </p>
               </div>
             </div>
@@ -159,22 +185,22 @@ export function StudentReport({ studentId, onBack }: StudentReportProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-600">Curso</p>
-                <p>{data.student.course}</p>
+                <p>{data.student?.course || '—'}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Turma</p>
-                <p>{data.student.class}</p>
+                <p>{data.student?.class || '—'}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Data de Nascimento</p>
-                <p>{formatDate(data.student.birthDate)}</p>
+                <p>{formatDate(data.student?.birthDate)}</p>
               </div>
-              {data.student.guardianName && (
+              {data.student?.guardianName && (
                 <div>
                   <p className="text-sm text-gray-600">Responsável</p>
-                  <p>{data.student.guardianName}</p>
-                  {data.student.guardianContact && (
-                    <p className="text-sm text-gray-500">{data.student.guardianContact}</p>
+                  <p>{data.student?.guardianName}</p>
+                  {data.student?.guardianContact && (
+                    <p className="text-sm text-gray-500">{data.student?.guardianContact}</p>
                   )}
                 </div>
               )}
@@ -206,13 +232,13 @@ export function StudentReport({ studentId, onBack }: StudentReportProps) {
             </div>
           </CardHeader>
           <CardContent>
-            {data.adaptations.length === 0 ? (
+            {adaptations.length === 0 ? (
               <p className="text-center text-gray-500 py-4">
                 Nenhuma adaptação registrada
               </p>
             ) : (
               <div className="space-y-4">
-                {data.adaptations.map((adaptation) => (
+                  {adaptations.map((adaptation) => (
                   <div key={adaptation.id} className="border rounded-lg p-4">
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-2">
@@ -282,19 +308,19 @@ export function StudentReport({ studentId, onBack }: StudentReportProps) {
             </div>
           </CardHeader>
           <CardContent>
-            {data.reports.length === 0 ? (
+            {reports.length === 0 ? (
               <p className="text-center text-gray-500 py-4">
                 Nenhum relato registrado
               </p>
             ) : (
               <div className="space-y-4">
-                {data.reports.map((report) => (
+                {reports.map((report) => (
                   <div key={report.id} className="border rounded-lg p-4">
                     <div className="flex justify-between items-start mb-3">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span>{report.teacherName}</span>
-                          <Badge variant="outline">{report.subject}</Badge>
+                          <span>{report.teacherName || user?.name || 'Professor(a)'}</span>
+                          <Badge variant="outline">{report.subject || 'Disciplina'}</Badge>
                           {getResultBadge(report.result)}
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-600">

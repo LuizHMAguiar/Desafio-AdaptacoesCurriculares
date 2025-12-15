@@ -6,22 +6,19 @@ const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 
 async function createUser(email: string, password: string, name: string, role: 'coordenador' | 'professor') {
   try {
-    const response = await fetch(`${API_BASE}/signup`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${ANON_KEY}`
-      },
-      body: JSON.stringify({ email, password, name, role })
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
+    try {
+      const data = await (await import('../lib/api')).apiFetch(`${API_BASE}/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${ANON_KEY}`
+        },
+        body: JSON.stringify({ email, password, name, role })
+      }).then((r: any) => r);
       console.log(`✅ Usuário criado: ${email} (${role})`);
       return true;
-    } else {
-      console.log(`❌ Erro ao criar ${email}: ${data.error}`);
+    } catch (error: any) {
+      console.log(`❌ Erro ao criar ${email}: ${error?.message || error}`);
       return false;
     }
   } catch (error) {

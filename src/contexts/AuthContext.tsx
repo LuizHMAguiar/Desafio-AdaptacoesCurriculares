@@ -1,9 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { User } from '../types';
+<<<<<<< HEAD
 import { authStorage, initializeDefaultUsers, initializeDefaultData } from '../lib/storage';
 import { supabase } from '../lib/supabase';
 
 const API_URL = 'https://adaptacoescurriculares-api.onrender.com';
+=======
+import { apiFetch } from '../lib/api';
+>>>>>>> b97e84a78e3e4e15db920414c230afd5d561b2f3
 
 interface AuthContextType {
   user: User | null;
@@ -46,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signIn(email: string, password: string) {
+<<<<<<< HEAD
     // Ensure default users exist in localStorage
     initializeDefaultUsers();
 
@@ -103,6 +108,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.warn('Remote API lookup failed', err);
     }
+=======
+    // Busca o usuário na rota /users filtrando pelo email
+    let data: any;
+    try {
+      data = await apiFetch(`${API_URL}/users?email=${email}`);
+    } catch (err: any) {
+      throw new Error(err?.message || 'Erro ao conectar com a API');
+    }
+    const user = Array.isArray(data) && data.length > 0 ? data[0] : null;
+>>>>>>> b97e84a78e3e4e15db920414c230afd5d561b2f3
 
     // Final fallback: local hardcoded credentials
     const user = authStorage.signIn(email, password);

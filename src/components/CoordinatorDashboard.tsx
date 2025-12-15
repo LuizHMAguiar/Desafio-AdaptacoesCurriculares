@@ -7,8 +7,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Users, FileText, Database } from 'lucide-react';
 import ApiStudentList from './ApiStudentList';
 import { toast } from 'sonner@2.0.3';
+<<<<<<< HEAD
 import { Button } from './ui/button';
 import { api } from '../lib/api';
+=======
+import { apiFetch } from '../lib/api';
+
+const API_URL = 'https://adaptacoescurriculares-api.onrender.com';
+>>>>>>> b97e84a78e3e4e15db920414c230afd5d561b2f3
 
 export function CoordinatorDashboard() {
   const [view, setView] = useState<'list' | 'form' | 'report'>('list');
@@ -28,7 +34,11 @@ export function CoordinatorDashboard() {
 
   const handleDeleteStudent = async (student: Student) => {
     try {
+<<<<<<< HEAD
       await api.deleteStudent(student.id);
+=======
+      await apiFetch(`${API_URL}/students/${student.id}`, { method: 'DELETE' });
+>>>>>>> b97e84a78e3e4e15db920414c230afd5d561b2f3
       toast.success('Estudante excluído com sucesso!');
       setRefreshKey(prev => prev + 1);
     } catch (err: any) {
