@@ -7,6 +7,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Search, UserPlus, Eye, Edit, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from './ui/alert';
+import { api } from '../lib/api';
 
 interface StudentListProps {
   onSelectStudent: (student: Student) => void;
@@ -16,7 +17,6 @@ interface StudentListProps {
   showActions?: boolean;
 }
 
-const API_URL = 'https://adaptacoescurriculares-api.onrender.com';
 
 export function StudentList({ 
   onSelectStudent, 
@@ -47,11 +47,7 @@ export function StudentList({
     try {
       setLoading(true);
       setError('');
-      const response = await fetch(`${API_URL}/students`);
-      if (!response.ok) {
-        throw new Error('Erro ao carregar estudantes');
-      }
-      const data = await response.json();
+      const data = await api.getStudents();
       setStudents(data);
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar estudantes');

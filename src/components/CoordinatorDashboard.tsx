@@ -4,15 +4,17 @@ import { StudentForm } from './StudentForm';
 import { StudentReport } from './StudentReport';
 import type { Student } from '../types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Users, FileText } from 'lucide-react';
+import { Users, FileText, Database } from 'lucide-react';
+import ApiStudentList from './ApiStudentList';
 import { toast } from 'sonner@2.0.3';
-
-const API_URL = 'https://adaptacoescurriculares-api.onrender.com';
+import { Button } from './ui/button';
+import { api } from '../lib/api';
 
 export function CoordinatorDashboard() {
   const [view, setView] = useState<'list' | 'form' | 'report'>('list');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showApiStudents, setShowApiStudents] = useState(false);
 
   const handleSelectStudent = (student: Student) => {
     setSelectedStudent(student);
@@ -26,10 +28,7 @@ export function CoordinatorDashboard() {
 
   const handleDeleteStudent = async (student: Student) => {
     try {
-      const response = await fetch(`${API_URL}/students/${student.id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) throw new Error('Erro ao excluir estudante');
+      await api.deleteStudent(student.id);
       toast.success('Estudante excluído com sucesso!');
       setRefreshKey(prev => prev + 1);
     } catch (err: any) {
@@ -77,14 +76,27 @@ export function CoordinatorDashboard() {
 
         <TabsContent value="students">
           {view === 'list' && (
-            <StudentList
-              key={refreshKey}
-              onSelectStudent={handleSelectStudent}
-              onEditStudent={handleEditStudent}
-              onDeleteStudent={handleDeleteStudent}
-              onAddNew={handleAddNew}
-              showActions={true}
-            />
+            <>
+              <div className="mb-4 flex justify-end gap-2 print:hidden">
+                <Button onClick={() => setShowApiStudents(s => !s)} variant="outline" className="gap-2">
+                  <Database className="size-4" />
+                  {showApiStudents ? 'Fechar API' : 'Estudantes da API'}
+                </Button>
+              </div>
+
+              {showApiStudents ? (
+                <ApiStudentList onClose={() => setShowApiStudents(false)} onImport={() => setRefreshKey(k => k + 1)} />
+              ) : (
+                <StudentList
+                  key={refreshKey}
+                  onSelectStudent={handleSelectStudent}
+                  onEditStudent={handleEditStudent}
+                  onDeleteStudent={handleDeleteStudent}
+                  onAddNew={handleAddNew}
+                  showActions={true}
+                />
+              )}
+            </>
           )}
 
           {view === 'form' && (
