@@ -57,7 +57,22 @@ export const api = {
   },
   createStudent: async (student: any) => apiFetch(`${API_URL}/students`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(student) }),
   updateStudent: async (studentId: string, updates: any) => apiFetch(`${API_URL}/students/${studentId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) }),
-  getAdaptations: async (studentId: string) => apiFetch(`${API_URL}/adaptations/${studentId}`),
+  getAdaptations: async (studentId: string) => {
+    try {
+      const res = await apiFetch(`${API_URL}/adaptations/${studentId}`);
+      if (Array.isArray(res)) return res;
+      // Handle envelope shapes
+      if (res && typeof res === 'object') {
+        if (Array.isArray((res as any).value)) return (res as any).value;
+        if (Array.isArray((res as any).adaptations)) return (res as any).adaptations;
+      }
+      return [];
+    } catch (err: any) {
+      // If 404, return empty array (no adaptations for this student)
+      if (err?.status === 404) return [];
+      throw err;
+    }
+  },
   createAdaptation: async (adaptation: any) => apiFetch(`${API_URL}/adaptations`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(adaptation) }),
   updateAdaptation: async (studentId: string, adaptationId: string, updates: any) => {
     try {
@@ -69,7 +84,22 @@ export const api = {
       throw err;
     }
   },
-  getReports: async (studentId: string) => apiFetch(`${API_URL}/reports/${studentId}`),
+  getReports: async (studentId: string) => {
+    try {
+      const res = await apiFetch(`${API_URL}/reports/${studentId}`);
+      if (Array.isArray(res)) return res;
+      // Handle envelope shapes
+      if (res && typeof res === 'object') {
+        if (Array.isArray((res as any).value)) return (res as any).value;
+        if (Array.isArray((res as any).reports)) return (res as any).reports;
+      }
+      return [];
+    } catch (err: any) {
+      // If 404, return empty array (no reports for this student)
+      if (err?.status === 404) return [];
+      throw err;
+    }
+  },
   getStudentReport: async (studentId: string) => {
     try {
       const res = await apiFetch(`${API_URL}/reports/${studentId}`);

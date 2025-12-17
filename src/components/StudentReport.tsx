@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { adaptationStorage, reportStorage } from '../lib/storage';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { AdaptationForm } from './AdaptationForm';
 import { ReportForm } from './ReportForm';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface StudentReportProps {
   studentId: string;

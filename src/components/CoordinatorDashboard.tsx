@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { StudentList } from './StudentList';
 import { StudentForm } from './StudentForm';
 import { StudentReport } from './StudentReport';
 import type { Student } from '../types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Users, FileText } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
-import { Button } from './ui/button';
+import { Users } from 'lucide-react';
+import { toast } from 'sonner';
 import { api } from '../lib/api';
 
 export function CoordinatorDashboard() {

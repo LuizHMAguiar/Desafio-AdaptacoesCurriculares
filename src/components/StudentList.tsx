@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import type { Student } from '../types';
 import { Input } from './ui/input';
 import { Label } from './ui/label';

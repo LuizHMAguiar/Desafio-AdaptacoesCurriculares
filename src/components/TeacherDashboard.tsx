@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { StudentReport } from './StudentReport';
 import type { Student } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -40,9 +40,14 @@ export function TeacherDashboard() {
       // Check which students have adaptations
       const studentsWithAdaps = new Set<string>();
       for (const student of allStudents) {
-        const adaptations = await api.getAdaptations(student.id);
-        if (Array.isArray(adaptations) && adaptations.length > 0) {
-          studentsWithAdaps.add(student.id);
+        try {
+          const adaptations = await api.getAdaptations(student.id);
+          if (Array.isArray(adaptations) && adaptations.length > 0) {
+            studentsWithAdaps.add(student.id);
+          }
+        } catch (err) {
+          // Ignore individual adaptation load errors, continue with next student
+          console.warn(`Erro ao carregar adaptações para estudante ${student.id}:`, err);
         }
       }
 
@@ -56,8 +61,8 @@ export function TeacherDashboard() {
   }
 
   function filterStudents() {
-    // Only show students with adaptations
-    let filtered = students.filter(s => studentsWithAdaptations.has(s.id));
+    // Show ALL students (not just those with adaptations)
+    let filtered = students;
 
     if (nameFilter) {
       filtered = filtered.filter(s => 
@@ -161,8 +166,8 @@ export function TeacherDashboard() {
           {filteredStudents.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500">
-                {studentsWithAdaptations.size === 0 
-                  ? 'Nenhum estudante com adaptações curriculares cadastrado'
+                {students.length === 0 
+                  ? 'Nenhum estudante cadastrado'
                   : 'Nenhum estudante encontrado com os filtros aplicados'}
               </p>
             </div>
@@ -177,10 +182,12 @@ export function TeacherDashboard() {
                     <div className="flex items-center gap-2 mb-1">
                       <h3>{student.name}</h3>
                       <Badge variant="outline">{student.registrationNumber}</Badge>
-                      <Badge variant="default" className="gap-1">
-                        <FileCheck className="size-3" />
-                        Com Adaptações
-                      </Badge>
+                      {studentsWithAdaptations.has(student.id) && (
+                        <Badge variant="default" className="gap-1">
+                          <FileCheck className="size-3" />
+                          Com Adaptações
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex gap-4 text-sm text-gray-600">
                       <span>Curso: {student.course}</span>
