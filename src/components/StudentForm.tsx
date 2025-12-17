@@ -14,11 +14,6 @@ interface StudentFormProps {
   onCancel: () => void;
 }
 
-<<<<<<< HEAD
-=======
-const API_URL = 'https://adaptacoescurriculares-api.onrender.com';
-import { apiFetch } from '../lib/api';
->>>>>>> b97e84a78e3e4e15db920414c230afd5d561b2f3
 
 export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) {
   const [formData, setFormData] = useState({
@@ -63,25 +58,10 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
     setLoading(true);
     try {
       if (student) {
-<<<<<<< HEAD
         await api.updateStudent(student.id, formData);
         toast.success('Estudante atualizado com sucesso!');
       } else {
         await api.createStudent(formData);
-=======
-        await apiFetch(`${API_URL}/students/${student.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        });
-        toast.success('Estudante atualizado com sucesso!');
-      } else {
-        await apiFetch(`${API_URL}/students`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        });
->>>>>>> b97e84a78e3e4e15db920414c230afd5d561b2f3
         toast.success('Estudante cadastrado com sucesso!');
       }
       onSuccess();

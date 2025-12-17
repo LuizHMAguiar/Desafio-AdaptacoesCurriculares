@@ -45,7 +45,18 @@ export default apiFetch;
 
 // Pequeno wrapper com métodos usados pela UI
 export const api = {
-  getStudents: async () => apiFetch(`${API_URL}/students`),
+  getStudents: async () => {
+    const res = await apiFetch(`${API_URL}/students`);
+    if (Array.isArray(res)) return res;
+    // Handle common API envelope shapes
+    if (res && typeof res === 'object') {
+      if (Array.isArray((res as any).value)) return (res as any).value;
+      if (Array.isArray((res as any).students)) return (res as any).students;
+    }
+    return [];
+  },
+  createStudent: async (student: any) => apiFetch(`${API_URL}/students`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(student) }),
+  updateStudent: async (studentId: string, updates: any) => apiFetch(`${API_URL}/students/${studentId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) }),
   getAdaptations: async (studentId: string) => apiFetch(`${API_URL}/adaptations/${studentId}`),
   createAdaptation: async (adaptation: any) => apiFetch(`${API_URL}/adaptations`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(adaptation) }),
   updateAdaptation: async (studentId: string, adaptationId: string, updates: any) => apiFetch(`${API_URL}/adaptations/${studentId}/${adaptationId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) }),
@@ -124,6 +135,7 @@ export const api = {
   },
   createReport: async (report: any) => apiFetch(`${API_URL}/reports`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(report) }),
   updateReport: async (studentId: string, reportId: string, updates: any) => apiFetch(`${API_URL}/reports/${studentId}/${reportId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) }),
+  deleteStudent: async (studentId: string) => apiFetch(`${API_URL}/students/${studentId}`, { method: 'DELETE' }),
   deleteAdaptation: async (studentId: string, adaptationId: string) => apiFetch(`${API_URL}/adaptations/${studentId}/${adaptationId}`, { method: 'DELETE' }),
   deleteReport: async (studentId: string, reportId: string) => apiFetch(`${API_URL}/reports/${studentId}/${reportId}`, { method: 'DELETE' }),
 };

@@ -8,13 +8,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
 import { Search, Eye, FileCheck } from 'lucide-react';
-<<<<<<< HEAD
 import { api } from '../lib/api';
-=======
-
-const API_URL = 'https://adaptacoescurriculares-api.onrender.com';
-import { apiFetch } from '../lib/api';
->>>>>>> b97e84a78e3e4e15db920414c230afd5d561b2f3
 
 export function TeacherDashboard() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -41,29 +35,14 @@ export function TeacherDashboard() {
     try {
       setLoading(true);
       setError('');
-<<<<<<< HEAD
       const allStudents = await api.getStudents();
-=======
-      
-      const allStudents = await apiFetch(`${API_URL}/students`);
->>>>>>> b97e84a78e3e4e15db920414c230afd5d561b2f3
 
       // Check which students have adaptations
       const studentsWithAdaps = new Set<string>();
       for (const student of allStudents) {
-<<<<<<< HEAD
         const adaptations = await api.getAdaptations(student.id);
-        if (adaptations.length > 0) {
+        if (Array.isArray(adaptations) && adaptations.length > 0) {
           studentsWithAdaps.add(student.id);
-=======
-        try {
-          const adaptations = await apiFetch(`${API_URL}/adaptations?studentId=${student.id}`);
-          if (Array.isArray(adaptations) && adaptations.length > 0) {
-            studentsWithAdaps.add(student.id);
-          }
-        } catch (e) {
-          // ignore per-student errors but keep loading others
->>>>>>> b97e84a78e3e4e15db920414c230afd5d561b2f3
         }
       }
 

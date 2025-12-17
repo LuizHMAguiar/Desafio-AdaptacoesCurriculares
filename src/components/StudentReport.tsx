@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
+import { adaptationStorage, reportStorage } from '../lib/storage';
 import { useAuth } from '../contexts/AuthContext';
 import type { StudentReport as StudentReportType, Adaptation, Report } from '../types';
 import { Button } from './ui/button';
@@ -66,8 +67,39 @@ export function StudentReport({ studentId, onBack }: StudentReportProps) {
 
       setLoading(true);
       setError('');
-      const reportData = await api.getStudentReport(studentId);
-      setData(reportData);
+      let reportData: any = null;
+      try {
+        reportData = await api.getStudentReport(studentId);
+      } catch (err) {
+        // remote failed - we'll assemble from local storage
+        reportData = { student: null, adaptations: [], reports: [] };
+      }
+
+      // Always merge local stored adaptations/reports so local creates persist
+      const localAdaptations = adaptationStorage.getByStudent(studentId) || [];
+      const localReports = reportStorage.getByStudent(studentId) || [];
+
+      const asArray = (v: any) => {
+        if (!v) return [];
+        if (Array.isArray(v)) return v;
+        if (typeof v === 'object') return [v];
+        return [];
+      };
+
+      const mergedAdaptationsMap = new Map<string, any>();
+      asArray(reportData.adaptations).forEach((a: any) => mergedAdaptationsMap.set(String(a.id || a._localId || JSON.stringify(a)), a));
+      (localAdaptations || []).forEach((a: any) => mergedAdaptationsMap.set(String(a.id || a._localId || JSON.stringify(a)), a));
+      const mergedReportsMap = new Map<string, any>();
+      asArray(reportData.reports).forEach((r: any) => mergedReportsMap.set(String(r.id || r._localId || JSON.stringify(r)), r));
+      (localReports || []).forEach((r: any) => mergedReportsMap.set(String(r.id || r._localId || JSON.stringify(r)), r));
+
+      const merged = {
+        student: reportData.student || null,
+        adaptations: Array.from(mergedAdaptationsMap.values()),
+        reports: Array.from(mergedReportsMap.values()),
+      };
+
+      setData(merged);
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar relatório');
     } finally {
@@ -78,7 +110,13 @@ export function StudentReport({ studentId, onBack }: StudentReportProps) {
   const handleDeleteAdaptation = async (adaptation: Adaptation) => {
     if (window.confirm('Deseja realmente excluir esta adaptação?')) {
       try {
-        await api.deleteAdaptation(studentId, adaptation.id);
+        // delete locally first
+        adaptationStorage.delete(adaptation.id);
+        try {
+          await api.deleteAdaptation(studentId, adaptation.id);
+        } catch (err) {
+          // ignore remote failure
+        }
         toast.success('Adaptação excluída com sucesso!');
         loadReport();
       } catch (err: any) {
@@ -90,7 +128,12 @@ export function StudentReport({ studentId, onBack }: StudentReportProps) {
   const handleDeleteReport = async (report: Report) => {
     if (window.confirm('Deseja realmente excluir este relato?')) {
       try {
-        await api.deleteReport(studentId, report.id);
+        reportStorage.delete(report.id);
+        try {
+          await api.deleteReport(studentId, report.id);
+        } catch (err) {
+          // ignore remote failure
+        }
         toast.success('Relato excluído com sucesso!');
         loadReport();
       } catch (err: any) {

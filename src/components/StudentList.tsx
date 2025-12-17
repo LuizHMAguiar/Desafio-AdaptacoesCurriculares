@@ -17,11 +17,6 @@ interface StudentListProps {
   showActions?: boolean;
 }
 
-<<<<<<< HEAD
-=======
-const API_URL = 'https://adaptacoescurriculares-api.onrender.com';
-import { apiFetch } from '../lib/api';
->>>>>>> b97e84a78e3e4e15db920414c230afd5d561b2f3
 
 export function StudentList({ 
   onSelectStudent, 
@@ -52,11 +47,7 @@ export function StudentList({
     try {
       setLoading(true);
       setError('');
-<<<<<<< HEAD
-      const data = await api.getStudents();
-=======
-      const data = await apiFetch(`${API_URL}/students`);
->>>>>>> b97e84a78e3e4e15db920414c230afd5d561b2f3
+    const data = await api.getStudents();
       setStudents(data);
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar estudantes');

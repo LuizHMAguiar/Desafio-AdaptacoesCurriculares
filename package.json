@@ -50,18 +50,12 @@
             "vaul": "^1.1.2"
       },
       "devDependencies": {
-<<<<<<< HEAD
-          "@types/node": "^20.10.0",
-          "@types/react": "^18.2.29",
-          "@types/react-dom": "^18.2.7",
-          "@vitejs/plugin-react-swc": "^3.10.2",
-          "vite": "6.3.5"
-=======
             "@types/node": "^20.10.0",
+            "@types/react": "^18.2.29",
+            "@types/react-dom": "^18.2.7",
             "@vitejs/plugin-react-swc": "^3.10.2",
             "typescript": "^5.9.3",
             "vite": "6.3.5"
->>>>>>> b97e84a78e3e4e15db920414c230afd5d561b2f3
       },
       "scripts": {
             "dev": "vite",

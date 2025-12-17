@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
+import { reportStorage } from '../lib/storage';
 import type { Report, ReportResult } from '../types';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -75,19 +76,55 @@ export function ReportForm({
     try {
         let created: Report | undefined;
       if (report) {
-        await api.updateReport(studentId, report.id, formData);
-        toast.success('Relato atualizado com sucesso!');
+        try {
+          await api.updateReport(studentId, report.id, formData);
+          toast.success('Relato atualizado com sucesso!');
+        } catch (err) {
+          // ignore remote failure
+        }
+        const local = reportStorage.update(report.id, {
+          subject: formData.subject,
+          result: formData.result as any,
+          description: formData.description,
+          date: formData.date ? new Date(formData.date).toISOString() : new Date().toISOString(),
+        });
+        created = local || undefined;
       } else {
-          // ensure date is sent as ISO string
-          const payload = { ...formData, studentId, date: new Date(formData.date).toISOString() };
-          created = await api.createReport(payload);
+        const payload = { ...formData, studentId, date: new Date(formData.date).toISOString() };
+        try {
+          const res = await api.createReport(payload);
+          if (res && (res as any).id) {
+            created = reportStorage.create({
+              id: (res as any).id,
+              studentId,
+              subject: formData.subject,
+              result: formData.result as any,
+              description: formData.description,
+              date: new Date(formData.date).toISOString(),
+            } as any);
+          } else {
+            created = reportStorage.create({
+              studentId,
+              subject: formData.subject,
+              result: formData.result as any,
+              description: formData.description,
+              date: new Date(formData.date).toISOString(),
+            } as any);
+          }
           toast.success('Relato registrado com sucesso!');
-          // small delay to allow backend eventual consistency before reloading
-          await new Promise((res) => setTimeout(res, 250));
+        } catch (err) {
+          created = reportStorage.create({
+            studentId,
+            subject: formData.subject,
+            result: formData.result as any,
+            description: formData.description,
+            date: new Date(formData.date).toISOString(),
+          } as any);
+          toast.success('Relato registrado localmente (offline)');
+        }
       }
-      // Close modal first, then notify parent to reload. Pass created report so parent can optimistically add it.
       onOpenChange(false);
-        onSuccess(created);
+      onSuccess(created);
     } catch (err: any) {
       setError(err.message || 'Erro ao salvar relato');
       toast.error(err.message || 'Erro ao salvar relato');

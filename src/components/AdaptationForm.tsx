@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
+import { adaptationStorage } from '../lib/storage';
 import type { Adaptation } from '../types';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -65,22 +66,59 @@ export function AdaptationForm({
     try {
       let created: Adaptation | undefined;
       if (adaptation) {
-        const res = await api.updateAdaptation(studentId, adaptation.id, {
-          ...formData,
+        // Try remote update, but always persist locally
+        try {
+          await api.updateAdaptation(studentId, adaptation.id, {
+            ...formData,
+            date: new Date(formData.date).toISOString(),
+          });
+          toast.success('Adaptação atualizada com sucesso!');
+        } catch (err) {
+          // remote failure - still persist locally
+        }
+        const local = adaptationStorage.update(adaptation.id, {
+          description: formData.description,
+          justification: formData.justification,
           date: new Date(formData.date).toISOString(),
         });
-        // API may return either { adaptation } or the adaptation object directly
-        created = (res && (res as any).adaptation) ? (res as any).adaptation : (res && (res as any).id ? (res as any) : undefined);
-        toast.success('Adaptação atualizada com sucesso!');
+        created = local || undefined;
       } else {
-        const res = await api.createAdaptation({
-          ...formData,
-          studentId,
-          date: new Date(formData.date).toISOString(),
-        });
-        // API may return either { adaptation } or the adaptation object directly
-        created = (res && (res as any).adaptation) ? (res as any).adaptation : (res && (res as any).id ? (res as any) : undefined);
-        toast.success('Adaptação registrada com sucesso!');
+        // Try remote create, but always persist locally
+        try {
+          const res = await api.createAdaptation({
+            ...formData,
+            studentId,
+            date: new Date(formData.date).toISOString(),
+          });
+          // If remote returned object, try to use its values when persisting locally
+          if (res && (res as any).id) {
+            // persist locally with remote id when possible
+            created = adaptationStorage.create({
+              id: (res as any).id,
+              studentId,
+              description: formData.description,
+              justification: formData.justification,
+              date: new Date(formData.date).toISOString(),
+            } as any);
+          } else {
+            created = adaptationStorage.create({
+              studentId,
+              description: formData.description,
+              justification: formData.justification,
+              date: new Date(formData.date).toISOString(),
+            } as any);
+          }
+          toast.success('Adaptação registrada com sucesso!');
+        } catch (err) {
+          // remote failed - persist locally
+          created = adaptationStorage.create({
+            studentId,
+            description: formData.description,
+            justification: formData.justification,
+            date: new Date(formData.date).toISOString(),
+          } as any);
+          toast.success('Adaptação registrada localmente (offline)');
+        }
       }
       onSuccess(created);
       onOpenChange(false);
