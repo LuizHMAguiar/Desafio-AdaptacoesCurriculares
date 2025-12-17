@@ -59,7 +59,16 @@ export const api = {
   updateStudent: async (studentId: string, updates: any) => apiFetch(`${API_URL}/students/${studentId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) }),
   getAdaptations: async (studentId: string) => apiFetch(`${API_URL}/adaptations/${studentId}`),
   createAdaptation: async (adaptation: any) => apiFetch(`${API_URL}/adaptations`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(adaptation) }),
-  updateAdaptation: async (studentId: string, adaptationId: string, updates: any) => apiFetch(`${API_URL}/adaptations/${studentId}/${adaptationId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) }),
+  updateAdaptation: async (studentId: string, adaptationId: string, updates: any) => {
+    try {
+      return await apiFetch(`${API_URL}/adaptations/${adaptationId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
+    } catch (err: any) {
+      if (err?.status === 404) {
+        return await apiFetch(`${API_URL}/adaptations/${studentId}/${adaptationId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
+      }
+      throw err;
+    }
+  },
   getReports: async (studentId: string) => apiFetch(`${API_URL}/reports/${studentId}`),
   getStudentReport: async (studentId: string) => {
     try {
@@ -134,9 +143,36 @@ export const api = {
     }
   },
   createReport: async (report: any) => apiFetch(`${API_URL}/reports`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(report) }),
-  updateReport: async (studentId: string, reportId: string, updates: any) => apiFetch(`${API_URL}/reports/${studentId}/${reportId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) }),
+  updateReport: async (studentId: string, reportId: string, updates: any) => {
+    try {
+      return await apiFetch(`${API_URL}/reports/${reportId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
+    } catch (err: any) {
+      if (err?.status === 404) {
+        return await apiFetch(`${API_URL}/reports/${studentId}/${reportId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
+      }
+      throw err;
+    }
+  },
   deleteStudent: async (studentId: string) => apiFetch(`${API_URL}/students/${studentId}`, { method: 'DELETE' }),
-  deleteAdaptation: async (studentId: string, adaptationId: string) => apiFetch(`${API_URL}/adaptations/${studentId}/${adaptationId}`, { method: 'DELETE' }),
-  deleteReport: async (studentId: string, reportId: string) => apiFetch(`${API_URL}/reports/${studentId}/${reportId}`, { method: 'DELETE' }),
+  deleteAdaptation: async (studentId: string, adaptationId: string) => {
+    try {
+      return await apiFetch(`${API_URL}/adaptations/${adaptationId}`, { method: 'DELETE' });
+    } catch (err: any) {
+      if (err?.status === 404) {
+        return await apiFetch(`${API_URL}/adaptations/${studentId}/${adaptationId}`, { method: 'DELETE' });
+      }
+      throw err;
+    }
+  },
+  deleteReport: async (studentId: string, reportId: string) => {
+    try {
+      return await apiFetch(`${API_URL}/reports/${reportId}`, { method: 'DELETE' });
+    } catch (err: any) {
+      if (err?.status === 404) {
+        return await apiFetch(`${API_URL}/reports/${studentId}/${reportId}`, { method: 'DELETE' });
+      }
+      throw err;
+    }
+  },
 };
 

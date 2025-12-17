@@ -67,7 +67,7 @@ export function Layout({ children }: LayoutProps) {
                     {getRoleBadge()}
                   </div>
                 </div>
-                
+                {/*
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
@@ -95,7 +95,7 @@ export function Layout({ children }: LayoutProps) {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-
+                      */}
                 <Button
                   variant="outline"
                   size="sm"
