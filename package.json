@@ -58,6 +58,7 @@
             "vite": "6.3.5"
       },
       "scripts": {
+            "start": "vite preview --host 0.0.0.0 --port $PORT",
             "dev": "vite",
             "build": "vite build"
       }
